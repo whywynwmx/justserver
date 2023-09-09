@@ -4,7 +4,7 @@ local api = {}
 local _weaktb = {}
 local _weakcnt = 0
 setmetatable(_weaktb,{__mode="k"})
-local lua_app = require "lua_app"
+local skynet = require "skynet"
 
 function api.show()
 	local cnt = 0
@@ -135,7 +135,7 @@ function api.require_module(modules)
 			if ret and new_module then
 				api.hotfix(old_module,new_module)
 			else
-				lua_app.log_error("error exist in file:",v,ret,new_module)
+				skynet.error("error exist in file:",v,ret,new_module)
 			end
 			package.loaded[v] = old_module
 		end

@@ -1,6 +1,5 @@
 local server = require "server"
 local skynet = require "skynet"
-local lua_app = require "lua_app"
 
 local ServerCenter = ()
 

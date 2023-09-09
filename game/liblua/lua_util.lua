@@ -1,8 +1,7 @@
 local lua_util = {}
-local lua_app = require "lua_app"
-local server = require "server"
-local inspect = require "inspect"
 local skynet = require "skynet"
+local skynetex = require "lua_skynetex"
+local inspect = require "inspect"
 
 local print = print
 local tconcat = table.concat
@@ -36,77 +35,6 @@ function lua_util.print(root)
 	skynet.error(_dump(root, "",""))
 end
 
--- 在表中寻找某个值的引用
-function lua_util.findRef(findObj, value)
-	local caches = {}
-	setmetatable(caches, {__mode = "k"})
-	local function foreachTbl(obj, key)	
-		key = key or ""	
-		if caches[obj] then
-			return
-		end
-			
-		caches[obj] = true
-		local tbl, weakKey, weakValue
-		if type(obj) == "table" then
-			tbl = obj
-			local mt = getmetatable(obj)	
-			if mt then
-				if mt.__mode then
-					weakKey = string.find(mt.__mode, "k")
-					weakValue = string.find(mt.__mode, "v")
-				end
-
-				foreachTbl(mt, key .. ".metatable")				
-			end
-		elseif type(obj) == "function" then
-			tbl = lua_util.getUpvalues(obj)
-		elseif type(obj) == "thread" then	
-			tbl = lua_util.getLocalValues(obj)
-		else
-			return
-		end
-
-		for k, v in pairs(tbl) do				
-			if not weakKey and (type(k) == "table" or type(k) == "function") and tostring(k) == value or 
-			   not weakValue and (type(v) == "table" or type(v) == "function") and tostring(v) == value then
-				table.print(server.lastFuncInfos, "server.lastFuncInfo")
-				table.print(server.lastStackInfos, "server.lastStackInfo")
-				local selfKey = tostring(k)				
-				if type(v) == "table" and v._fileinfo_ then
-					selfKey = selfKey .. "_" .. v._fileinfo_
-				end
-				print("~~~~~~~~~~~~~find value", value, key .. "." .. selfKey)
-			else
-				if not weakKey then
-					foreachTbl(k, key .. "." .. tostring(k))
-				end
-
-				if not weakValue then
-					foreachTbl(v, key .. "." .. tostring(k))
-				end
-			end
-		end
-	end
-
-	foreachTbl(findObj)
-end
-
-function lua_util.addLastCoStack(co)
-	server.lastStackInfos = server.lastStackInfos or {}
-	table.insert(server.lastStackInfos, lua_app.coStacks[co])
-	if #server.lastStackInfos > 3 then
-		table.remove(server.lastStackInfos, 1)
-	end
-end
-
-function lua_util.addLastFuncInfo(tag, info)
-	server.lastFuncInfos = server.lastFuncInfos or {}
-	table.insert(server.lastFuncInfos, string.format("%s-%s-%d", tag, info.short_src, info.linedefined))
-	if #server.lastFuncInfos > 5 then
-		table.remove(server.lastFuncInfos, 1)
-	end
-end
 
 -- 获取指定协程的所有堆栈上的临时变量
 function lua_util.getLocalValues(co)
@@ -307,7 +235,6 @@ function lua_util.info(root)
 	end
 	skynet.error(_dump(root, "",""))
 end
-
 table.info = lua_util.info
 
 local max_deep_for_ptable = 9
@@ -353,7 +280,6 @@ function lua_util.split(str,sep,jump)
 	end)
 	return fields
 end
-
 string.split = lua_util.split
 
 function lua_util.gsplit(str)
@@ -369,43 +295,13 @@ function lua_util.gsplit(str)
 		if (new_bit >= 48 and new_bit <= 57) or (new_bit >= 65 and new_bit <= 90) or (new_bit >= 97 and new_bit <=122) then
 			table.insert(str_tb,string.sub(str,i,i))
 		else
-			print("error string")
+			skynet.error("error string to gsplit")
 			return {}
 		end
 	end
 	return str_tb
 end
-
 string.gsplit = lua_util.gsplit
-
-function lua_util.stack()
-    local startLevel = 2
-    local maxLevel = 2 
- 
-    for level = startLevel, maxLevel do
-        local info = debug.getinfo( level, "nSl") 
-        if info == nil then break end
-        print( string.format("[ line : %-4d]  %-20s :: %s", info.currentline, info.name or "", info.source or "" ) )
- 
-        local index = 1 
-        while true do
-            local name, value = debug.getlocal( level, index )
-            if name == nil then break end
- 
-            local valueType = type( value )
-            local valueStr
-            if valueType == 'string' then
-                valueStr = value
-            elseif valueType == "number" then
-                valueStr = string.format("%.2f", value)
-            end
-            if valueStr ~= nil then
-                print( string.format( "\t%s = %s\n", name, value ) )
-            end
-            index = index + 1
-        end
-    end
-end
 
 function lua_util.randomRange(min, max)
 	return math.random(max - min) + min
@@ -811,7 +707,6 @@ function lua_util.DelArrayElement(list, element)
 		end
 	end
 end
-
 table.del = lua_util.DelArrayElement
 
 -- 在数组1中排除数组2的对象
@@ -924,17 +819,6 @@ function lua_util.shuffle(t)
 end
 table.shuffle = lua_util.shuffle
 
-function lua_util.getFightEntityOnlyId(pos, num)
-	num = num or 1
-	return pos * 10 + num
-end
-
-function lua_util.fightEntityOnlyIdToPos(onlyId)
-	local pos = math.floor(onlyId / 10)
-	local num = onlyId - pos * 10
-	return pos, num 
-end
-
 -- 仅支持单层的table, 成员类型只能是string或number
 function lua_util.stringToTable(str, split1, split2)
 	split1 = split1 or "&"
@@ -962,66 +846,6 @@ function lua_util.tableToString(tbl, split1, split2)
 		end
 	end
 	return str
-end
-
-function lua_util.time_to_str(t, count)
-	local TD = math.floor(t/86400)
-	local TH = math.floor((t%86400)/3600)
-	local TM = math.floor((t%3600)/60)
-	local TS = t%60
-
-	count = count or 3
-	local str = ""
-	if count >= 4 then
-		str = str .. TD .. ":"
-	end 
-	if count >= 3 then
-		str = str .. TH .. ":"
-	end 
-	if count >= 2 then
-		str = str .. TM .. ":"
-	end 
-	if count >= 1 then
-		str = str .. TS 
-	end 
-	return str 
-end 
-
--- 通过dbid获取serverid 
-function lua_util.getServeridByDbid(dbid)
-	if dbid then 
-		return dbid >> 34 
-	end 
-end
-
-local callFuncTimes = {}
-local function StatFuncCall()
-	local tbl = debug.getinfo(2, "Snl")
-	local name = tbl and tbl.name or ""
-	local src = tbl and tbl.short_src or ""
-	local line = tbl and tbl.currentline or ""
-	local n = src .. " " .. line .. " " .. name
-	callFuncTimes[n] = (callFuncTimes[n] or 0) + 1
-end
-
-function lua_util.startStatFuncCall()
-	callFuncTimes = {}
-	debug.sethook(StatFuncCall, 'c') 
-end
-
-function lua_util.stopStatFuncCall()
-	debug.sethook() 
-	local sorts = {}
-	for k, v in pairs(callFuncTimes) do
-		table.insert(sorts, {n=k, c=v})
-	end
-
-	table.sort(sorts, function(l, r) return l.c > r.c end)
-	for k, v in ipairs(sorts) do
-		print(v.n, v.c)
-	end
-
-	callFuncTimes = {}
 end
 
 function lua_util.bubble_sort(t, cmpfunc)

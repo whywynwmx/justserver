@@ -1,6 +1,5 @@
 local skynet = require "skynet.manager"
 local server = require "server"
-local lua_app = require "lua_app"
 
 local skynet = require "skynet.manager"
 local socket = require "client.socket"

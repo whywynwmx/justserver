@@ -1,5 +1,5 @@
 local oo = require "class"
-local lua_app = require "lua_app"
+local skynet = require "skynet"
 
 -- 太经典了，我要写成C++
 -- 根据权重查找数据的数据结构
@@ -113,7 +113,7 @@ end
 function WeightData:C_SetValid(index, statu)
 	local data = self.datas[index]
 	if not data then
-		lua_app.log_error("WeightData:C_SetValid:: no data", index)
+		skynet.error("WeightData:C_SetValid:: no data", index)
 		return
 	end
 	if statu then
@@ -138,7 +138,7 @@ function WeightData:C_GetRandom()
 			end
 		end
 	end
-	lua_app.log_error("WeightData:C_GetRandom:: no random result", prob, self.c_maxProb, self.maxindex, self.maxProb)
+	skynet.error("WeightData:C_GetRandom:: no random result", prob, self.c_maxProb, self.maxindex, self.maxProb)
 end
 
 return WeightData

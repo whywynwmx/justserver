@@ -1,5 +1,5 @@
+local skynet = require "skynet"
 local lua_util = require "lua_util"
-local lua_app = require "lua_app"
 local lua_math = {}
 
 function lua_math.distance(point1,point2)
@@ -274,7 +274,7 @@ function lua_math.dijkstra(beg, adjmap)
 		flag[v] = 1
 		local adjDataV = adjmap[v]
 		if not adjDataV then
-			lua_app.log_error("lua_math.dijkstra invalid data")
+			skynet.error("lua_math.dijkstra invalid data")
 			return path, dist
 		end
 
@@ -299,7 +299,7 @@ function lua_math.calcPaths(beg, ed, paths, check)
 	if check then
 		for k, v in pairs(paths) do
 			if paths[v] == k then
-				lua_app.log_error("input data has cricle point")
+				skynet.error("input data has cricle point")
 				return
 			end
 		end
