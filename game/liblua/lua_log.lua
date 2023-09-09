@@ -1,5 +1,6 @@
 local skynet = require "skynet"
 local inspect = require "inspect"
+local server = require "server"
 
 local M = {}
 local levels = {
@@ -23,23 +24,27 @@ function M.debug(...)
 		local v = select(i, ...)
 		tbl[i] = table.inspect(v)
 	end
-	skynet.error("[DEBUG]", table.concat(tbl, " "))
+	local tag = "[" .. (server.wholename or "") .. ":DEBUG]"
+	skynet.error(tag, table.concat(tbl, " "))
 end
 
 function M.info(...)
 	if levels.info < loglevel then return end
-	skynet.error("[INFO]", ...)
+	local tag = "[" .. (server.wholename or "") .. ":INFO]"
+	skynet.error(tag, ...)
 end
 
 function M.warn(...)
 	if levels.warn < loglevel then return end
-	skynet.error("[WARN]", ...)
+	local tag = "[" .. (server.wholename or "") .. ":WARN]"
+	skynet.error(tag, ...)
 end
 
 function M.error(...)
 	if levels.error < loglevel then return end
-	skynet.error("[ERROR]", ...)
-	skynet.error("[ERROR]", debug.traceback())
+	local tag = "[" .. (server.wholename or "") .. ":ERROR]"
+	skynet.error(tag, ...)
+	skynet.error(tag, debug.traceback())
 end
 
 function M.log(...)

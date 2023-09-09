@@ -2,6 +2,13 @@ local skynet = require "skynet.manager"
 local server = require "server"
 local lua_util = require "lua_util"
 
+server.name = "mcenter"
+local platformid = ...
+server.index = 0
+server.platformid = tonumber(platformid)
+server.wholename = server.GetWholeName(server.name, server.index, server.platformid)
+skynet.error("~~~mcenter", server.name, server.index, server.platformid, server.wholename)
+
 require "svrmgr.include"
 
 local CMD = {}

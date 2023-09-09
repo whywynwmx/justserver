@@ -6,6 +6,7 @@ local platformid = ...
 server.index = 0
 server.platformid = tonumber(platformid)
 server.wholename = server.GetWholeName(server.name, server.index, server.platformid)
+skynet.error("~~~center", server.name, server.index, server.platformid, server.wholename)
 math.randomseed(tostring(os.time()):reverse():sub(1, 7))
 
 --加载模块代码

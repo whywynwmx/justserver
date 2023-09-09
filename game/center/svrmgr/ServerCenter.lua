@@ -16,7 +16,6 @@ function ServerCenter:Release()
 	end
 end
 
-skynet.log_info("~~~~~~~~~~~~~~~~~just test log:", table.inspectex(999, {www ="hllo"}, nil, "hlllle"))
 function ServerCenter:ServerRegist(src, name, index)
 	skynet.error("~~~~~~~~~~~~ServerCenter:ServerRegist", src, name, index)
 
