@@ -1,0 +1,3 @@
+[submodule "skynet"]
+	path = skynet
+	url = https://ghproxy.com/https://github.com/cloudwu/skynet.git
