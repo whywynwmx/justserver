@@ -2,6 +2,8 @@ local skynet = require "skynet.manager"
 local server = require "server"
 local lua_util = require "lua_util"
 
+require "svrmgr.include"
+
 local CMD = {}
 local SOCKET = {}
 local conf

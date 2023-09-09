@@ -3,6 +3,9 @@ local oo = require "class"
 local modules =
 {
 	"lua_util",
+	
+	"modules.Event",
+	"modules.BaseCenter",
 
 	"svrmgr.ServerCenter",
 	"svrmgr.NodeCenter",

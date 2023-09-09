@@ -1,6 +1,7 @@
 local lua_util = {}
 local skynet = require "skynet"
 local skynetex = require "lua_skynetex"
+local log = require "lua_log"
 local inspect = require "inspect"
 
 local print = print

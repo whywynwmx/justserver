@@ -1,7 +1,7 @@
 local server = require "server"
 local skynet = require "skynet"
 
-local ServerCenter = ()
+local ServerCenter = {}
 
 function ServerCenter:Init()
 	self.svrlist = {}			--[name][index] = src
@@ -16,6 +16,7 @@ function ServerCenter:Release()
 	end
 end
 
+skynet.log_info("~~~~~~~~~~~~~~~~~just test log:", table.inspectex(999, {www ="hllo"}, nil, "hlllle"))
 function ServerCenter:ServerRegist(src, name, index)
 	skynet.error("~~~~~~~~~~~~ServerCenter:ServerRegist", src, name, index)
 

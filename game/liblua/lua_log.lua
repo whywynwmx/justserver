@@ -8,7 +8,7 @@ local levels = {
 	warn = 3,
 	error = 4,
 }
-local level = skynet.gete("log_level") or "debug"
+local level = skynet.getenv("log_level") or "debug"
 local loglevel = levels[level]
 
 function M.is_debug()
@@ -45,5 +45,10 @@ end
 function M.log(...)
 	skynet.error(...)
 end
+
+skynet.log_info = M.info
+skynet.log_warn = M.warn
+skynet.log_error = M.error
+skynet.log_debug = M.debug
 
 return M
