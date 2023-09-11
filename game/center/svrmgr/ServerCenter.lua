@@ -6,18 +6,18 @@ local ServerCenter = {}
 function ServerCenter:Init()
 	self.svrlist = {}			--[name][index] = src
 	self.srcToInfo = {}			--src = {name, index, time}
-    self.checktimer = lua_app.add_update_timer(30000, self, "CheckHeartBeat")
+    self.checktimer = skynet.add_update_timer(30 * 100, self, "CheckHeartBeat")	--每30s
 end
 
 function ServerCenter:Release()
     if self.checktimer then
-		lua_app.del_local_timer(self.checktimer)
+		skynet.remove_timeout(self.checktimer)
 		self.checktimer = nil
 	end
 end
 
 function ServerCenter:ServerRegist(src, name, index)
-	skynet.error("~~~~~~~~~~~~ServerCenter:ServerRegist", src, name, index)
+	skynet.log_info("~~~~~~~~~~~~ServerCenter:ServerRegist", src, name, index)
 
 	if not self.svrlist[name] then
 		self.svrlist[name] = {}
@@ -27,7 +27,7 @@ function ServerCenter:ServerRegist(src, name, index)
 		dsrc = self.svrlist[name][index]
 		info = self.srcToInfo[dsrc]
 		if info.name ~= name or info.index ~= index then
-			skynet.error("ServerCenter:ServerRegist:: exist error name, index", name, index, src, info.name, info.index, dsrc)
+			skynet.log_error("ServerCenter:ServerRegist:: exist error name, index", name, index, src, info.name, info.index, dsrc)
 			return
 		end
 		self.srcToInfo[dsrc] = nil
@@ -38,7 +38,7 @@ function ServerCenter:ServerRegist(src, name, index)
 		info = self.srcToInfo[src]
 		dsrc = self.svrlist[info.name][info.index]
 		if dsrc ~= src then
-			skynet.error("ServerCenter:ServerRegist:: exist error src", name, index, src, info.name, info.index, dsrc)
+			skynet.log_error("ServerCenter:ServerRegist:: exist error src", name, index, src, info.name, info.index, dsrc)
 			return
 		end
 		self.svrlist[info.name][info.index] = nil
@@ -52,12 +52,11 @@ function ServerCenter:ServerRegist(src, name, index)
 	self.srcToInfo[src] = {
 		name = name,
 		index = index,
-		time = lua_app.now(),
+		time = skynet.timeI(),
 	}
 
 	if name == "logic" then
 		self:Send(src, "UpdateConnList", server.nodeCenter:GetNodeToAddr())
---		server.dispatchCenter:ToAddMatch(nil, nil)			--后台登录服， record，plat
 
 		--尝试分配Cross服务器
 		server.dispatchCenter:AddOneMatch(index)
@@ -69,6 +68,56 @@ function ServerCenter:ServerRegist(src, name, index)
 		lua_app.log_info("ServerRegist:: connect", name, index, src)
 	end
 end
+
+function ServerCenter:ServerDisconnect(src, reason)
+	local info = self.srcToInfo[src]
+	if not info then return end
+	self.svrlist[info.name][info.index] = nil
+	self.srcToInfo[src] = nil
+	self:Broadcast("SetServerSource", nil, info.name, info.index, reason)
+	server.nodeCenter:Broadcast("SetServerSource", nil, info.name, info.index, reason)
+	skynet.log_info("ServerDisconnect::", reason, info.name, info.index, src)
+end
+
+function ServerCenter:HeartBeat(src, name, index)
+	local info = self.srcToInfo[src]
+	if not info or info.name ~= name or info.index ~= index then return false end
+	info.time = skynet.timeI()
+	return true
+end
+
+function ServerCenter:CheckHeartBeat()
+	self.checktimer = skynet.add_update_timer(30000, self, "CheckHeartBeat")
+	local outtime = skynet.timeI() - 60
+	local removes = {}
+	for src, info in pairs(self.srcToInfo) do
+		if info.time < outtime then
+			removes[src] = info
+		end
+	end
+	for src, _ in pairs(removes) do
+		self:ServerDisconnect(src, "timeout")
+	end
+end
+
+function server.ServerRegist(src, name, index)
+	server.serverCenter:ServerRegist(src, name, index)
+end
+
+function server.ServerDisconnect(src)
+	server.serverCenter:ServerDisconnect(src, "normal")
+end
+
+
+function server.SendRunModFun(src, modname, funcname, ...)
+	local mod = server[modname]
+	mod[funcname](mod, ...)
+end
+function server.CallRunModFun(src, modname, funcname, ...)
+	local mod = server[modname]
+	mod[funcname](mod, ...)
+end
+
 
 server.SetCenter(ServerCenter, "serverCenter")
 return ServerCenter
