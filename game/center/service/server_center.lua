@@ -63,6 +63,10 @@ function server.Start(_conf)
 end
 
 function server.HotFix()
+	skynet.log_info("center server HotFix")
+	package.loaded["svrmgr.include"] = nil
+	require "svrmgr.include"
+
 	server.onevent(server.event.hotfix)
 end
 

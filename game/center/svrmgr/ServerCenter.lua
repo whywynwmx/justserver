@@ -16,6 +16,10 @@ function ServerCenter:Release()
 	end
 end
 
+function ServerCenter:HotFix()
+	skynet.log_info("~~~~~~~~~~~~ServerCenter:HotFix")
+end
+
 function ServerCenter:ServerRegist(src, name, index)
 	skynet.log_info("~~~~~~~~~~~~ServerCenter:ServerRegist", src, name, index)
 
