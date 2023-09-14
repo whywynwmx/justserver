@@ -21,7 +21,14 @@ function Blob:Init(cfg)
 	assert(server.mysqlConfig)
 	assert(server.mysqlCenter)
 	local db = server.mysqlConfig.keepname and server.mysqlConfig.db or self:GetCorrectDB(server.mysqlConfig.db)
-	local cache = cfg
+	local cache = {
+		ip = skynet.getenv("db_host"),
+		port = skynet.getenv("db_port"),
+		user = skynet.getenv("db_user"),
+		pass = skynet.getenv("db_pass"),
+		num = skynet.getenv("db_num"),
+		dbname = skynet.getenv("db_name"),
+	}
 	self:CheckDB(db, server.mysqlConfig, cache.ip, cache.port, cache.user, cache.pass, cache.dbname)
 	self:CheckUpdate(server.mysqlConfig.update, db, cache.ip, cache.port, cache.user, cache.pass, cache.dbname)
 	self:RefreshDBList(db)
@@ -171,7 +178,7 @@ function Blob:CheckTb(tbname, tbconfig, gconn, clconn, dbname, existtables)
 			})
 		local columns = {}
 		for _, vv in ipairs(ret) do
-			columns[vv.column_name] = vv
+			columns[vv.column_name or vv.COLUMN_NAME] = vv
 		end
 		local vvv
 		for _, vv in ipairs(tbconfig.columns) do
@@ -180,7 +187,7 @@ function Blob:CheckTb(tbname, tbconfig, gconn, clconn, dbname, existtables)
 				skynet.log_info("Blob:CheckTb::", sql)
 				gconn:call_execute(sql)
 				gconn:update(tbname, {}, { [vv[1]] = vv[3] })
-			elseif columns[vv[1]].column_type ~= vv[2] then
+			elseif (columns[vv[1]].column_type or columns[vv[1]].COLUMN_TYPE) ~= vv[2] then
 				local sql = self:SetColumnSql(tbname, vv, vvv and vvv[1], "MODIFY")
 				skynet.log_info("Blob:CheckTb::", sql)
 				gconn:call_execute(sql)
@@ -206,7 +213,7 @@ function Blob:CheckDB(dbconfig, config, ip, port, user, pass, dbname)
 	local ret = conn:query("tables", { table_schema = dbname }, { table_name = true })
 	local tables = {}
 	for _, v in ipairs(ret) do
-		tables[v.table_name] = true
+		tables[v.table_name or v.TABLE_NAME] = true
 	end
 	self:CheckTb(versionname, version, gconn, conn, dbname, tables)
 	local beforeversion = config.beforeupdate

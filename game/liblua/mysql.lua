@@ -94,15 +94,23 @@ function client_api:reconnect()
 end
 
 function client_api:call_execute(sql_str)
+	local ret = self.db:query(sql_str)
 	skynet.log_debug("mysql call_execute:", sql_str)
-
-	return self.db:query(sql_str)
+	skynet.log_debug("result:", ret)
+	if ret.badresult then
+		skynet.log_error("mysql call_execute failed:", sql_str, ret.err)
+	end
+	return ret
 end
 
 function client_api:send_execute(sql_str)
+	local ret = self.db:query(sql_str)
 	skynet.log_debug("mysql send_execute:", sql_str)
-
-	return self.db:query(sql_str)
+	skynet.log_debug("result:", ret)
+	if ret.badresult then
+		skynet.log_error("mysql call_execute failed:", sql_str, ret.err)
+	end
+	return ret
 end
 
 function client_api:close()
@@ -121,53 +129,12 @@ function client_api:wait_close()
 	self:close()
 end
 
-
-client_api.escape_string = mysql.quote_sql_str
+-- client_api.escape_string = mysql.quote_sql_str
 api.escape_string = mysql.quote_sql_str
 
-function client_api:query_one(table_name,cond,fields)
-	local fields_str = ""
-	if get_table_real_count(fields or {}) <= 0 then
-		fields_str = "*"
-	else
-		local field_values = {}
-		for field ,_ in pairs(fields) do
-			table.insert(field_values,field)
-		end
+function client_api:escape_string(sql_str)
 
-		fields_str = table.concat(field_values,",")
-	end
-
-	local cond_str = ""
-
-	for cond_key,cond_val in pairs(cond or {}) do
-		if cond_str == "" then
-			cond_str = " WHERE "
-		else
-			cond_str = cond_str .. " and "
-		end
-		cond_str = cond_str..cond_key.." = "..cond_val
-	end
-
-	local select_sql_str = "SELECT "..fields_str.." FROM "..table_name..cond_str..";"
-
-	local try_num = 10
-
-	local result,effect_rows,datas = self:call_execute(select_sql_str)
-
-	while result == false and try_num > 0 do
-		skynet.sleep(1 * 100)
-		try_num = try_num - 1
-		result,effect_rows,datas = self.call_execute(select_sql_str)
-	end
-
-	local data = {}
-
-	for _ ,v in pairs(datas or {}) do
-		data = v
-	end
-
-	return data,result
+	return mysql.quote_sql_str(sql_str)
 end
 
 function client_api:get_query(table_name,cond,fields,skip,number)
@@ -209,7 +176,7 @@ end
 
 function client_api:query(table_name,cond,fields,skip,number)
 	local select_sql_str = self:get_query(table_name,cond,fields,skip,number)
-	local result,effect_rows,datas = self:call_execute(select_sql_str)
+	local datas = self:call_execute(select_sql_str)
 	return datas or {}
 end
 
@@ -237,7 +204,7 @@ function client_api:batch_get(table_name,cond,fields)
 	end
 
 	local select_sql_str = "select "..fields_str .. " from " .. table_name .. cond_str .. ";"
-	local result,effect_rows,datas = self:call_execute(select_sql_str)
+	local datas = self:call_execute(select_sql_str)
 
 	return datas or {}
 end
@@ -266,7 +233,7 @@ function client_api:get_insert_m(table_name,table_data)
 				table.insert(data_value, "'"..table_to_str.."'")
 			elseif ttype == "string" then
 				field_value = self:escape_string(field_value)
-				table.insert(data_value, "'"..field_value.."'")
+				table.insert(data_value, field_value)
 			else
 				table.insert(data_value, field_value)
 			end
@@ -284,7 +251,7 @@ end
 
 function client_api:insert_m(table_name,table_data)
 	local insert_sql_str = self:get_insert_m(table_name,table_data)
-	local result,rows,data,insertId = self:call_execute(insert_sql_str)
+	local result = self:call_execute(insert_sql_str)
 	return result
 end
 
@@ -304,7 +271,7 @@ function client_api:get_insert(table_name,table_data)
 			table.insert(data_values,"'"..table_to_str.."'")
 		elseif type(field_value) == "string" then
 			field_value = self:escape_string(field_value)
-			table.insert(data_values,"'"..field_value.."'")
+			table.insert(data_values, field_value)
 		elseif type(field_value) == "boolean" then
 			table.insert(data_values,(field_value and 1 or 0))
 		else
@@ -318,9 +285,9 @@ end
 
 function client_api:insert(table_name,table_data)
 	local insert_sql_str = self:get_insert(table_name,table_data)
-	local result,rows,data,insertId = self:call_execute(insert_sql_str)
+	local result = self:call_execute(insert_sql_str)
 
-	return result,insertId and math.floor(insertId) or 0
+	return result
 end
 
 function client_api:insert_s(table_name,table_data)
@@ -382,7 +349,7 @@ function client_api:get_update(table_name,cond,data,upsert,ret)
 			table.insert(update_values, "`" .. field_name .. "`='"..table_to_str.."'")
 		elseif type(field_value) == "string" then
 			field_value = self:escape_string(field_value)
-			table.insert(update_values, "`" .. field_name .. "`='"..field_value.."'")
+			table.insert(update_values, "`" .. field_name .. "`="..field_value)
 		elseif type(field_value) == "boolean" then
 			table.insert(update_values, "`" .. field_name .. "`=" .. (field_value and 1 or 0))
 		else
@@ -397,8 +364,8 @@ end
 function client_api:update(table_name,cond,data,upsert,ret)
 	local update_sql_str = self:get_update(table_name,cond,data,upsert,ret)
 	if upsert == true then
-		local result,effect_rows,datas = self:call_execute(update_sql_str)
-		if effect_rows <= 0 then
+		local result = self:call_execute(update_sql_str)
+		if result.err then
 			for field,value in pairs(cond) do
 				data[field] = value
 			end

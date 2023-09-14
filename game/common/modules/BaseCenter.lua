@@ -1,5 +1,6 @@
 local server = require "server"
 local lua_log = require "lua_log"
+local skynet = require "skynet"
 local oo = require "class"
 require "modules.Event"
 
@@ -88,11 +89,9 @@ function server.CallRunModFun(src, modname, funcname, ...)
 	local mod = server[modname]
 	if mod == nil then
 		skynet.log_error("call invalid mod", modname)
-		skynet.ret()
 	elseif mod[funcname] == nil then
 		skynet.log_error("call invalid function", funcname)
-		skynet.ret()
 	else
-		skynet.ret(mod[funcname](mod, ...))
+		return mod[funcname](mod, ...)
 	end
 end

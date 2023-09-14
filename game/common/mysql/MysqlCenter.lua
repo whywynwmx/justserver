@@ -4,10 +4,21 @@ local lua_util = require "lua_util"
 
 local MysqlCenter = {}
 
+skynet.log_info("mysql center load")
+
 function MysqlCenter:Init(cfg)
+	skynet.log_info("mysql center init")
+
 	if not self.source or self.source == 0 then
 		self.source = skynet.newservice("mysql/mysql", server.platformid)
-		skynet.call(self.source, "lua", "Start", cfg)
+		skynet.call(self.source, "lua", "Start", {
+			ip = skynet.getenv("db_host"),
+			port = skynet.getenv("db_port"),
+			user = skynet.getenv("db_user"),
+			pass = skynet.getenv("db_pass"),
+			num = skynet.getenv("db_num"),
+			dbname = skynet.getenv("db_name"),
+		})
 		assert(self.source and self.source>0, self.source)
 	end
 end

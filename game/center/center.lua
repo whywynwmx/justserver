@@ -9,8 +9,7 @@ server.wholename = server.GetWholeName(server.name, server.index, server.platfor
 skynet.error("~~~center", server.name, server.index, server.platformid, server.wholename)
 math.randomseed(tostring(os.time()):reverse():sub(1, 7))
 
---加载模块代码
--- require "include"
+local centerSource
 
 server.Start = function(source, ...)
     skynet.error("~~~center Start", source, ...)
@@ -19,6 +18,8 @@ end
 
 server.HotFix = function(source, ...)
     skynet.error("~~~center HotFix", source, ...)
+    
+    skynet.call(centerSource, "lua", "HotFix")
 end
 
 -- local t1, t2 = skynet.pack(1, {hh=4}, 5)
@@ -34,8 +35,8 @@ skynet.start(function()
         skynet.ret(server[cmd](source, ...))
     end)
 
-    local watchdog = skynet.newservice("service/server_center")
-	local addr,port = skynet.call(watchdog, "lua", "start", {
+    local centerSource = skynet.newservice("service/server_center")
+	local addr,port = skynet.call(centerSource, "lua", "Start", {
 		port = 8888,
 		maxclient = max_client,
 		nodelay = true,

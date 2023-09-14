@@ -7,7 +7,7 @@ local platformid = ...
 server.index = 0
 server.platformid = tonumber(platformid)
 server.wholename = server.GetWholeName(server.name, server.index, server.platformid)
-skynet.error("~~~mcenter", server.name, server.index, server.platformid, server.wholename)
+skynet.log_info("~~~mcenter", server.name, server.index, server.platformid, server.wholename)
 
 require "svrmgr.include"
 
@@ -52,10 +52,18 @@ function SOCKET.data(fd, msg)
 	
 end
 
-function server.start(_conf)
+function server.Start(_conf)
     conf = _conf
     skynet.error("center listen on " .. conf.port)
-	return skynet.call(gate, "lua", "open" , conf)
+	skynet.call(gate, "lua", "open" , conf)
+	
+	server.onevent(server.event.init)
+
+	return true
+end
+
+function server.HotFix()
+	server.onevent(server.event.hotfix)
 end
 
 function server.close(fd)
