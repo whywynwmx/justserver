@@ -12,6 +12,9 @@ local modules =
 	"mysql.update",
 	"mysql.MysqlBlob",
 
+	"svrmgr.ServerConfig",
+	"dispatch.NodeDispatch",
+	"dispatch.DispatchFunc",
 	"dispatch.DispatchCenter",
 
 	"svrmgr.ServerCenter",

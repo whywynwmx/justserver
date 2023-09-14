@@ -35,4 +35,23 @@ function skynet.add_local_timer(delay, func, obj, ...)
     return session
 end
 
+function skynet.waitmultrun(func, list, ...)
+	if not next(list) then return {} end
+	local args = {...}
+	local tmp, ret = 0, {}
+	local co = coroutine.running()
+	for i, v in pairs(list) do
+		tmp = tmp + 1
+		skynet.timeout(0, function()
+				ret[i] = func(i, v, table.unpack(args))
+				tmp = tmp - 1
+				if tmp == 0 then
+					lua_app.wake(co)
+				end
+			end)
+	end
+	lua_app.wait()
+	return ret
+end
+
 return skynet

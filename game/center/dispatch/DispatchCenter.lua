@@ -1,6 +1,6 @@
-local skynet = require "skynet"
+local skynet = require "lua_skynetex"
 local server = require "server"
--- local DispatchFunc = require "dispatch.DispatchFunc"
+local DispatchFunc = require "dispatch.DispatchFunc"
 local tbname = "dispatchlist"
 
 local DispatchCenter = {}
@@ -19,7 +19,6 @@ function DispatchCenter:Init()
 end
 
 function DispatchCenter:Release()
-
 end
 
 function DispatchCenter:SetSvrdtb(name, serverid, index)
@@ -122,7 +121,7 @@ end
 function DispatchCenter:ToAddMatch(dispatchfunc, param)
 	dispatchfunc = dispatchfunc and DispatchFunc[dispatchfunc] or DispatchFunc.AutoDtbAdd
 	if self.addMatchTimer[dispatchfunc] then return end
-	self.addMatchTimer[dispatchfunc] = lua_app.add_timer(5000, function()
+	self.addMatchTimer[dispatchfunc] = skynet.timeout(5 * 100, function()
 			self.addMatchTimer[dispatchfunc] = nil
 			self:AddMatch(dispatchfunc, param)
 		end)
