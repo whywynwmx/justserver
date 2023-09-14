@@ -3,7 +3,6 @@ local skynet = require "skynet"
 local socket = require "skynet.socket"
 local lua_util = require "lua_util"
 
-local WATCHDOG
 
 local CMD = {}
 local client_fd
@@ -17,10 +16,12 @@ skynet.register_protocol {
 	id = skynet.PTYPE_CLIENT,
 	unpack = skynet.unpack,
 	dispatch = function (fd, _, type, ...)
+		local ret
 	    if server[type] then
-            server[type](...)
+            ret = server[type](...)
         else
-            skynet.error("unknown message type: ", table.inspectex(type, ...))
+			ret = skynet.send(server.centerSource, "lua", type, ...)
+            -- skynet.error("unknown message type: ", table.inspectex(type, ...))
         end
 
 		skynet.ignoreret()	-- session is fd, don't call skynet.ret
@@ -30,10 +31,10 @@ skynet.register_protocol {
 function CMD.start(conf)
 	local fd = conf.client
 	local gate = conf.gate
-	WATCHDOG = conf.watchdog
+	server.centerSource = conf.watchdog
 
 	client_fd = fd
-	skynet.call(gate, "lua", "forward", fd)
+	skynet.call(gate, "lua", "forward", fd)	
 end
 
 function CMD.disconnect()

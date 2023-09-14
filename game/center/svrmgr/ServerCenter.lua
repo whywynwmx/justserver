@@ -123,5 +123,9 @@ function server.CallRunModFun(src, modname, funcname, ...)
 end
 
 
+function server.justtest(src, name, ...)
+	skynet.log_info("~~~~~~~~~justtest", src, name, ...)
+end
+
 server.SetCenter(ServerCenter, "serverCenter")
 return ServerCenter

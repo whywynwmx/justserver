@@ -39,6 +39,6 @@ skynet.start(function()
     end)
 
     fd = assert(socket.connect("127.0.0.1", 8888))
-    send_request("shit", {t=333}, "endshit")
+    send_request("justtest", {t=333}, "endshit")
     -- skynet.fork(clientloop)
 end)
