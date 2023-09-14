@@ -62,7 +62,6 @@ end
 
 skynet.start(function()
 	skynet.dispatch("lua", function(session, source, cmd, ...)
-		skynet.log_info(server.wholename, "command:", cmd, ...)
 		if not server[cmd] then
 			skynet.log_error("no command:", cmd,...)
 			return

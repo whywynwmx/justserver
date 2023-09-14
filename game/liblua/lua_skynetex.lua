@@ -13,7 +13,7 @@ end
 
 function skynet.add_update_timer(delay, obj, func, ...)
     local args = {...}
-    table.insert(args, 1, func)
+    -- table.insert(args, 1, func)
     table.insert(args, 1, obj)
 
     local _func = function()
@@ -23,9 +23,9 @@ function skynet.add_update_timer(delay, obj, func, ...)
     return session
 end
 
-function skynet.add_update_timer(delay, func, obj, ...)
+function skynet.add_local_timer(delay, func, obj, ...)
     local args = {...}
-    table.insert(args, 1, func)
+    -- table.insert(args, 1, func)
     table.insert(args, 1, obj)
 
     local _func = function()

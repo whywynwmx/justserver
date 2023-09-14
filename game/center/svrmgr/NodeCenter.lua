@@ -111,7 +111,7 @@ function NodeCenter:HeartBeat(src, name, node, addr)
 end
 
 function NodeCenter:CheckHeartBeat()
-	self.checktimer = skynet.add_update_timer(30000, self, "CheckHeartBeat")
+	self.checktimer = skynet.add_update_timer(30 * 100, self, "CheckHeartBeat")
 	local outtime = skynet.timeI() - 60
 	local removes = {}
 	for src, info in pairs(self.srcToInfo) do
