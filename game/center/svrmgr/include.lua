@@ -7,6 +7,13 @@ local modules =
 	"modules.Event",
 	"modules.BaseCenter",
 
+	"mysql.MysqlCenter",
+	"mysql.config",
+	"mysql.update",
+	"mysql.MysqlBlob",
+
+	"dispatch.DispatchCenter",
+
 	"svrmgr.ServerCenter",
 	"svrmgr.NodeCenter",
 }

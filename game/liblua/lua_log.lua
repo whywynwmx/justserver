@@ -17,6 +17,15 @@ function M.is_debug()
 	return true
 end
 
+local function log_detail()
+	local info = debug.getinfo(3, "nSl") 
+	local name = info.source:match(".+%/(.+)$")
+	local line = info.currentline
+	local func = info.name
+	info = string.format("%s-%d: ",name,line)
+	return info
+end
+
 function M.debug(...)
 	if levels.debug < loglevel then return end
 	local tbl = {}
@@ -25,25 +34,25 @@ function M.debug(...)
 		tbl[i] = table.inspect(v)
 	end
 	local tag = "[" .. (server.wholename or "") .. ":DEBUG]"
-	skynet.error(tag, table.concat(tbl, " "))
+	skynet.error(tag .. log_detail(), table.concat(tbl, " "))
 end
 
 function M.info(...)
 	if levels.info < loglevel then return end
 	local tag = "[" .. (server.wholename or "") .. ":INFO]"
-	skynet.error(tag, ...)
+	skynet.error(tag .. log_detail(), ...)
 end
 
 function M.warn(...)
 	if levels.warn < loglevel then return end
 	local tag = "[" .. (server.wholename or "") .. ":WARN]"
-	skynet.error(tag, ...)
+	skynet.error(tag .. log_detail(), ...)
 end
 
 function M.error(...)
 	if levels.error < loglevel then return end
 	local tag = "[" .. (server.wholename or "") .. ":ERROR]"
-	skynet.error(tag, ...)
+	skynet.error(tag .. log_detail(), ...)
 	skynet.error(tag, debug.traceback())
 end
 

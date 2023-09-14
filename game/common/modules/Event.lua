@@ -42,16 +42,6 @@ function server.regfunc(eventid, func, isreverse)
 	table.insert(order[eventid], func)
 end
 
--- function server.regfuncname(eventid, funcname, isreverse)
---	local dispatcher = server.eventfuncs.dispatcher
---	local order = isreverse and server.eventfuncs.disrorder or server.eventfuncs.disorder
--- 	dispatcher[eventid] = dispatcher[eventid] or {}
--- 	order[eventid] = order[eventid] or {}
--- 	assert(dispatcher[eventid][funcname] == nil, "reregist function: eventid = " .. eventid)
--- 	dispatcher[eventid][funcname] = true
--- 	table.insert(order[eventid], funcname)
--- end
-
 function server.reglocalfunc(eventid, modname, funcname, isreverse)
 	local dispatcher = server.eventfuncs.dispatcher
 	local order = isreverse and server.eventfuncs.disrorder or server.eventfuncs.disorder

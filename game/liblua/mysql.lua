@@ -19,6 +19,8 @@ local client_meta =
 }
 
 function api.client(host, port, user, password, database, charset)
+	skynet.log_debug("mysql client connect to %s:%d", host, port)
+
 	host = host or "127.0.0.1"
 	port = port or 3306
 	charset = charset or "utf8mb4"
@@ -92,10 +94,14 @@ function client_api:reconnect()
 end
 
 function client_api:call_execute(sql_str)
+	skynet.log_debug("mysql call_execute:", sql_str)
+
 	return self.db:query(sql_str)
 end
 
 function client_api:send_execute(sql_str)
+	skynet.log_debug("mysql send_execute:", sql_str)
+
 	return self.db:query(sql_str)
 end
 

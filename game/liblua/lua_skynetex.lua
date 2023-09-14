@@ -1,5 +1,5 @@
 local skynet = require "skynet"
-
+require "lua_log"
 
 --获取当前时间戳，不要小数
 function skynet.timeI()
@@ -34,3 +34,5 @@ function skynet.add_update_timer(delay, func, obj, ...)
     local session = skynet.timeout(delay, _func)
     return session
 end
+
+return skynet
