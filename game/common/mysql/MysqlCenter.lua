@@ -24,6 +24,9 @@ function MysqlCenter:Init(cfg)
 end
 
 function MysqlCenter:HotFix()
+	if not self.source or self.source == 0 then
+		return
+	end
 	skynet.send(self.source, "lua", "HotFix")
 end
 

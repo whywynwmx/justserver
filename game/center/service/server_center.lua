@@ -11,51 +11,51 @@ skynet.log_info("~~~mcenter", server.name, server.index, server.platformid, serv
 
 require "svrmgr.include"
 
-local CMD = {}
-local SOCKET = {}
-local conf
-local gate
-local agent = {}
+-- local CMD = {}
+-- local SOCKET = {}
+-- local conf
+-- local gate
+-- local agent = {}
 
-function SOCKET.open(fd, addr)
-	skynet.error("New client from : " .. addr)
-	agent[fd] = skynet.newservice(conf.agent or "service/server_agent")
-	skynet.call(agent[fd], "lua", "start", { gate = gate, client = fd, watchdog = skynet.self() })
-end
+-- function SOCKET.open(fd, addr)
+-- 	skynet.error("New client from : " .. addr)
+-- 	agent[fd] = skynet.newservice(conf.agent or "service/server_agent")
+-- 	skynet.call(agent[fd], "lua", "start", { gate = gate, client = fd, watchdog = skynet.self() })
+-- end
 
-local function close_agent(fd)
-	local a = agent[fd]
-	agent[fd] = nil
-	if a then
-		skynet.call(gate, "lua", "kick", fd)
-		-- disconnect never return
-		skynet.send(a, "lua", "disconnect")
-	end
-end
+-- local function close_agent(fd)
+-- 	local a = agent[fd]
+-- 	agent[fd] = nil
+-- 	if a then
+-- 		skynet.call(gate, "lua", "kick", fd)
+-- 		-- disconnect never return
+-- 		skynet.send(a, "lua", "disconnect")
+-- 	end
+-- end
 
-function SOCKET.close(fd)
-	print("socket close",fd)
-	close_agent(fd)
-end
+-- function SOCKET.close(fd)
+-- 	print("socket close",fd)
+-- 	close_agent(fd)
+-- end
 
-function SOCKET.error(fd, msg)
-	print("socket error",fd, msg)
-	close_agent(fd)
-end
+-- function SOCKET.error(fd, msg)
+-- 	print("socket error",fd, msg)
+-- 	close_agent(fd)
+-- end
 
-function SOCKET.warning(fd, size)
-	-- size K bytes havn't send out in fd
-	print("socket warning", fd, size)
-end
+-- function SOCKET.warning(fd, size)
+-- 	-- size K bytes havn't send out in fd
+-- 	print("socket warning", fd, size)
+-- end
 
-function SOCKET.data(fd, msg)
+-- function SOCKET.data(fd, msg)
 	
-end
+-- end
 
 function server.Start(_conf)
-    conf = _conf
-    skynet.error("center listen on " .. conf.port)
-	skynet.call(gate, "lua", "open" , conf)
+    -- conf = _conf
+    -- skynet.error("center listen on " .. conf.port)
+	-- skynet.call(gate, "lua", "open" , conf)
 	
 	server.onevent(server.event.init)
 
@@ -68,6 +68,11 @@ function server.HotFix()
 	require "svrmgr.include"
 
 	server.onevent(server.event.hotfix)
+end
+
+function server.Test()
+	skynet.log_info("~~~center server Test")
+	return "test from center"
 end
 
 function server.close(fd)

@@ -1,8 +1,9 @@
 local skynet = require "skynet.manager"
 local server = require "server"
 
-local skynet = require "skynet.manager"
 local socket = require "client.socket"
+
+local cluster = require "skynet.cluster"
 
 local fd
 
@@ -21,7 +22,9 @@ end
 
 function clientloop()
     while true do
-        send_package("heartbeat")
+        -- send_package("heartbeat")
+        local t = cluster.call("center", ".center", "Test")
+        print("~~~~~~~~~~~~~debug node:", t)
         skynet.sleep(2000)
     end
 end
@@ -38,7 +41,7 @@ skynet.start(function()
         end
     end)
 
-    fd = assert(socket.connect("127.0.0.1", 8888))
-    send_request("justtest", {t=333}, "endshit")
-    -- skynet.fork(clientloop)
+    -- fd = assert(socket.connect("127.0.0.1", 8888))
+    -- send_request("justtest", {t=333}, "endshit")
+    skynet.fork(clientloop)
 end)

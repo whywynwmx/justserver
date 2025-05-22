@@ -1,5 +1,6 @@
 local server = require "server"
 local skynet = require "skynet.manager"
+local cluster = require "skynet.cluster"
 
 server.name = "center"
 local platformid = ...
@@ -39,8 +40,10 @@ skynet.start(function()
 
     server.centerSource = skynet.newservice("service/server_center")
 	local addr,port = skynet.call(server.centerSource, "lua", "Start", {
-		port = 8888,
-		maxclient = max_client,
-		nodelay = true,
+		-- port = 8888,
+		-- maxclient = max_client,
+		-- nodelay = true,
 	})
+
+    cluster.open "center"
 end)
