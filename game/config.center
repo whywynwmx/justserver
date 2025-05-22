@@ -8,13 +8,13 @@ snax = root.."game/?.lua"
 
 -- preload = "./examples/preload.lua"	-- run preload.lua before every lua service run
 thread = 4
-logger = nil -- "center.log"
+logger = "center.log"
 logpath = "./log"
 harbor = 0
 start = "center/main"	-- main script
 bootstrap = "snlua bootstrap"	-- The service for bootstrap
 -- snax_interface_g = "snax_g"
--- daemon = "./skynet.pid"
+--daemon = "./center.pid"
 
 debug_port = 8000
 
