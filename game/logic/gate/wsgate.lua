@@ -6,6 +6,8 @@ local websocket = require "http.websocket"
 local lua_util = require "lua_util"
 local server = require "server"
 
+require "gate.loginCheck"
+
 server.name = "wsgate"
 server.platformid = 0
 
@@ -23,11 +25,11 @@ local cur_client = 0
 local function init(conf)
 	-- local n = conf.maxclient // 10
     local n = 2
-	skynet.error("precreate %d agents", n)
-	-- for i = 1, n do
-	-- 	local agent = assert(skynet.newservice("agent/agent"), string.format("precreate agent %d of %d error", i, n))
-	-- 	table.insert(agent_pool, agent)
-	-- end
+	skynet.error("precreate agents", n)
+	for i = 1, n do
+		local agent = assert(skynet.newservice("agent/agent"), string.format("precreate agent %d of %d error", i, n))
+		table.insert(agent_pool, agent)
+	end
     max_client = conf.maxclient
 end
 
@@ -93,11 +95,50 @@ function handle.handshake(fd, header, url)
     end)
 end
 
+local function send_package(fd, pack)
+	local package = string.pack(">s2", pack)
+	-- socket.write(fd, package)
+    websocket.write(fd, pack, "binary")
+end
+
+local function onLoginSuccess(fd, data)
+    local uid = data.uid
+    local agent
+    local player
+    if cache_players[uid] then
+        -- 缓存中有玩家对象，直接关联
+        player = cache_players[uid]
+        player.fd = fd
+        player.device_id = data.device_id
+        player.expiration = nil
+        cache_players[uid] = nil
+        agent = player.agent
+    else
+        agent = table.remove(agent_pool)
+        if not agent then
+            agent = skynet.newservice "agent/agent"
+        end
+        player = {uid=uid, fd=fd, device_id=data.device_id, agent=agent}
+        ok, err = pcall(skynet.call, agent, "lua", "start", {uid = uid, device_id = data.device_id, fd = fd})
+        if not ok then
+            skynet.error("加载玩家数据失败", err)
+            skynet.send(agent, "lua", "disconnect")
+            close_internal(fd)
+            return
+        end
+    end
+
+    players[uid] = player
+    -- TODO: 登录全局的用户中心
+    -- 如果是分布式部署，需要在中心服务器上登记在线玩家以及玩家登录的游戏服务器节点名称与玩家Agent地址
+    connections[fd] = uid
+end
+
 function handle.message(fd, msg, msg_type)
     assert(msg_type == "binary" or msg_type == "text")
     local size = #msg
 
-    skynet.log_info("msg_type=", msg_type)
+    -- skynet.log_info("msg_type=", msg_type)
     local uid = connections[fd]
     local player = players[uid]
     if player then
@@ -108,6 +149,14 @@ function handle.message(fd, msg, msg_type)
         if msgtype == "REQUEST" then
             if name == "checkAccount" then  -- 登录
                 skynet.error("收到登录请求", name, table.inspect(args))
+                local ret = server.checkAccount(fd, args)
+                
+                if ret.result == 0 then
+                    -- 登录成功
+                    onLoginSuccess(fd, ret)
+                end
+
+                send_package(fd, response(ret))
             else
                 skynet.error("error, server not support request", name)
                 close_internal(fd)
@@ -207,7 +256,7 @@ function handle.message(fd, msg, msg_type)
 end
 
 function handle.close(fd, code, reason)
-    skynet.error("连接断开: fd=%s", fd)
+    skynet.log_error("连接断开: fd=%s", fd)
     close_internal(fd)
 end
 
@@ -284,6 +333,8 @@ end
 
 -- call by agent
 function CMD.logout(uid)
+    skynet.log_info("玩家登出:", uid)
+
     local player = players[uid]
     if player then
         -- table.insert(agent_pool, player.agent)
