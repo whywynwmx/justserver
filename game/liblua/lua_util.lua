@@ -212,6 +212,7 @@ end
 
 table.print = lua_util.print2
 table.inspect = inspect
+lua_util.inspect = inspect
 
 function lua_util.info(root)
 	if root == nil then

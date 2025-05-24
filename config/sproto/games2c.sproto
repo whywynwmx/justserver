@@ -1,0 +1,66 @@
+# checkAccountRet 1 {
+# 	request {
+# 		result 0 : integer
+# 	}
+# }
+
+# scRoleBase 3 {
+# 	request {
+# 		roleNum 0 : integer
+		
+# 	}
+# }
+
+
+sc_base_game_time 6 {
+	request {
+		time          0 : integer
+		serverRunDay  1 : integer
+		yearWeek  	2: integer
+	}
+}
+
+# 服务器开启数
+sc_base_open_day 7 {
+	request {
+		day  1 : integer
+		loginDay 2 : integer
+		mergeDay 3 : integer
+		createDay 4 : integer 
+	}
+}
+
+# 被顶号
+sc_base_replace_account 8 {}
+
+# do_actor_info 101 {
+# 	request {}
+# }
+
+sc_error_code 9 {
+	request {
+		code		0 : integer
+		msg			1 : string
+	}
+}
+
+# 异步通知checkAccount 结果
+sc_check_account_result 10 {
+	request {
+		result 0 : integer
+	}
+}
+
+sc_error_warninfo 11 {
+	request {
+		code		0 : integer
+		msg			1 : string
+	}
+}
+
+# 进入游戏
+sc_enter_game 12 {
+	request {
+		newPlayer		0 : boolean
+	}
+}
