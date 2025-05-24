@@ -7,6 +7,8 @@ local sprotoloader = require "sprotoloader"
 local server = require "server"
 local lua_util = require "lua_util"
 
+require "agent.login.login"
+
 server.wholename = "agent_"
 
 -- local REQUEST = {}
@@ -47,7 +49,7 @@ local function request(name, args, response)
     end
 
     local startMem = collectgarbage("count")
-    local r = server[name](args, response)
+    local r = server[name](client_fd, args, response)
     local overMem = collectgarbage("count")
     if overMem - startMem > 100 then
         skynet.log_info("Cost Mem Too Large", name, overMem - startMem)
@@ -61,9 +63,12 @@ local function request(name, args, response)
 end
 
 local function send_package(pack)
-	local package = string.pack(">s2", pack)
+    skynet.log_info("send_package", lua_util.inspectex(client_fd, pack))
+
+	-- local package = string.pack(">s2", pack)
 	-- socket.write(fd, package)
-    websocket.write(client_fd, pack, "binary")
+    -- websocket.write(client_fd, pack, "binary")
+    skynet.send(".wsgate", "lua", "push", player_uid, pack)
 end
 
 skynet.register_protocol {
@@ -104,11 +109,14 @@ local function _RegSprotoSender()
 end
 
 function server.start(conf)
+    skynet.log_info("agent start", lua_util.inspectex(conf))
+
 	local fd = conf.fd
 
 	client_fd = fd
     player_uid = conf.uid
 
+    server.wholename = "agent_" .. player_uid
     return true
 end
 

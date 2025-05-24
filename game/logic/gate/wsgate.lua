@@ -45,7 +45,7 @@ local function close_internal(fd)
     end
     local player = players[uid]
     if player then
-        local ok, err = util.pcall(skynet.call, player.agent, "lua", "afk")
+        local ok, err = pcall(skynet.call, player.agent, "lua", "afk")
         if not ok then
             skynet.error(err)
         end
@@ -96,8 +96,9 @@ function handle.handshake(fd, header, url)
 end
 
 local function send_package(fd, pack)
-	local package = string.pack(">s2", pack)
+	-- local package = string.pack(">s2", pack)
 	-- socket.write(fd, package)
+    skynet.log_info("send_package", lua_util.inspectex(fd, pack))
     websocket.write(fd, pack, "binary")
 end
 
@@ -113,6 +114,8 @@ local function onLoginSuccess(fd, data)
         player.expiration = nil
         cache_players[uid] = nil
         agent = player.agent
+
+        pcall(skynet.call, agent, "lua", "start", {uid = uid, device_id = data.device_id, fd = fd})
     else
         agent = table.remove(agent_pool)
         if not agent then
@@ -256,7 +259,7 @@ function handle.message(fd, msg, msg_type)
 end
 
 function handle.close(fd, code, reason)
-    skynet.log_error("连接断开: fd=%s", fd)
+    skynet.log_info("连接断开: fd=%s", fd)
     close_internal(fd)
 end
 
@@ -272,8 +275,10 @@ end
 function CMD.push(uid, data)
     local player = players[uid]
     if not player then
+        skynet.error("玩家未在线，无法推送数据", uid)
         return
     end
+    skynet.log_info("推送数据给玩家:", lua_util.inspectex(uid, player.fd, data))
     websocket.write(player.fd, data, "binary")
 end
 
@@ -303,7 +308,7 @@ function CMD.get_player(uid)
         agent = skynet.newservice "agent/agent"
     end
     local player = {uid=uid, agent=agent}
-    local ok, err = util.pcall(skynet.call, agent, "lua", "load", uid)
+    local ok, err = pcall(skynet.call, agent, "lua", "load", uid)
     if not ok then
         skynet.error("加载玩家数据失败", err)
         skynet.send(agent, "lua", "exit")
