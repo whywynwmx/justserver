@@ -63,12 +63,23 @@ local function request(name, args, response)
 end
 
 local function send_package(pack)
-    skynet.log_info("send_package", lua_util.inspectex(client_fd, pack))
+    -- skynet.log_info("send_package", lua_util.inspectex(client_fd, pack))
 
 	-- local package = string.pack(">s2", pack)
 	-- socket.write(fd, package)
     -- websocket.write(client_fd, pack, "binary")
     skynet.send(".wsgate", "lua", "push", player_uid, pack)
+end
+
+function server.sendReq(msg, param)
+	skynet.log_info("sendReq", lua_util.inspectex(msg, param))
+
+	local pack = server.protoSender(msg, param)
+	if pack then
+		send_package(pack)
+	else
+		skynet.log_error("sendReq failed", lua_util.inspectex(msg, param))
+	end
 end
 
 skynet.register_protocol {
@@ -117,6 +128,10 @@ function server.start(conf)
     player_uid = conf.uid
 
     server.wholename = "agent_" .. player_uid
+
+	-- skynet.timeout(100 * 10, function()
+	-- 	server.sendReq("sc_base_game_time", { time = 101, serverRunDay = 204, yearWeek = 5 })
+	-- end)
     return true
 end
 
